@@ -24,16 +24,27 @@ class MainViewModel @Inject constructor(
     AbstractViewModel() {
     private val _state: MutableStateFlow<MainState> = MutableStateFlow(MainState.Data())
     override val state: StateFlow<MainState> = _state.asStateFlow()
+    private val _inputData: MutableStateFlow<MainState.Data> = MutableStateFlow(MainState.Data())
     override fun doAction(action: Action) {
         when (action) {
             is MainAction.OnClickLogin -> {
                 viewModelScope.launch {
-                    getFileUseCase.invoke(action.token.prefixHeader()).onRight {
-                        downloadUseCase.invoke(it.href)
+                    val token = _inputData.value.token
+                    val name=_inputData.value.name
+                    getFileUseCase.invoke(token
+                    .prefixHeader()).onRight {
+                        downloadUseCase.invoke(
+                            it.href, action.uri,
+                            name
+                        )
                     }.onLeft {
                         Log.d("TAG999", "doAction: $it")
                     }
                 }
+            }
+            is MainAction.SaveTokenAndNameFile -> {
+                _inputData.value=MainState.Data(token = action.token, name = action.nameFile)
+                _state.value=_inputData.value
             }
         }
     }

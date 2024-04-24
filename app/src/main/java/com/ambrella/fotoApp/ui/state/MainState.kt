@@ -8,7 +8,8 @@ interface MainState : State {
 
     @Immutable
     data class Data(
-        val token: String = emptyString()
+        val token: String = emptyString(),
+        val name: String = emptyString()
     ) : MainState
 
     object Loading : MainState

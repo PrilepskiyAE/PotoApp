@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,10 +38,20 @@ class MainActivity : ComponentActivity() {
             PotoAppTheme {
                 val state by mainViewModel.state.collectAsState()
                 val sdk = YandexAuthSdk.create(YandexAuthOptions(applicationContext))
+                val selectFileLauncher =
+                    rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/*")) { picktureUri ->
+                        if (picktureUri != null) {
+                              mainViewModel.doAction(MainAction.OnClickLogin(picktureUri))
+                        }
+                    }
+
+
                 val launcher = rememberLauncherForActivityResult(sdk.contract) { result ->
                     when (result) {
                         is YandexAuthResult.Success -> run {
-                            mainViewModel.doAction(MainAction.OnClickLogin(result.token.value))
+                            val name="image_${System.currentTimeMillis()}.jpg"
+                            mainViewModel.doAction(MainAction.SaveTokenAndNameFile(result.token.value,name))
+                            selectFileLauncher.launch(name)
                         }
 
                         is YandexAuthResult.Failure -> {
